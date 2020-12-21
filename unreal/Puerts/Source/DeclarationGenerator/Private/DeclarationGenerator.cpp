@@ -19,8 +19,10 @@
 #include "LevelEditor.h"
 #include "GenDTSStyle.h"
 #include "GenDTSCommands.h"
+#include "JsEnv.h"
 #include "NotificationManager.h"
 #include "SNotificationList.h"
+#include "SNumericEntryBox.h"
 #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Engine/UserDefinedStruct.h"
@@ -816,7 +818,59 @@ private:
 
     void AddToolbarExtension(FToolBarBuilder& Builder)
     {
-        Builder.AddToolBarButton(FGenDTSCommands::Get().PluginAction);
+        static FName ExtensionHook = TEXT("TsToolBarButton");
+        Builder.AddToolBarButton(FGenDTSCommands::Get().PluginAction, ExtensionHook);
+        
+        Builder.AddComboButton(
+            FUIAction(),
+            FOnGetContent::CreateLambda([]()
+            {
+                return SNew(SBox)
+                .WidthOverride(150)
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot()
+                    [
+                        SNew(SHorizontalBox)
+                        + SHorizontalBox::Slot()
+                        .FillWidth(1)
+                        [
+                            SNew(STextBlock)
+                            .Text(LOCTEXT("DebugEnable", "启用Ts调试"))
+                        ]
+                        + SHorizontalBox::Slot()
+                        .FillWidth(1)
+                        [
+                            SNew(SCheckBox)
+                            .IsChecked_Lambda([](){return puerts::FJsEnv::bDebugEnable ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;})
+                            .OnCheckStateChanged_Lambda([](ECheckBoxState NewState) { puerts::FJsEnv::bDebugEnable = NewState == ECheckBoxState::Checked;})
+                        ]
+                    ]
+                    + SVerticalBox::Slot()
+                    [
+                        SNew(SHorizontalBox)
+                        + SHorizontalBox::Slot()
+                        .FillWidth(1)
+                        [
+                            SNew(STextBlock)
+                            .Text(LOCTEXT("DebugPort", "调试端口"))
+                        ]
+                        + SHorizontalBox::Slot()
+                        .FillWidth(1)
+                        [
+                            SNew(SNumericEntryBox<int32>)
+                            .MinValue(1025)
+                            .MaxValue(65535)
+                            .MinSliderValue(5000)
+                            .MaxSliderValue(10000)
+                            .Delta(1)
+                            .Value_Lambda([](){return puerts::FJsEnv::DebugPort;})
+                            .OnValueChanged_Lambda([](int32 NewValue){puerts::FJsEnv::DebugPort = NewValue;})
+                        ]
+                    ]
+                ]; 
+            })
+        );
     }
 
     void GenUeDts()

@@ -400,6 +400,24 @@ private:
     V8Inspector* Inspector;
 };
 
+bool FJsEnv::bDebugEnable = false;
+
+int32 FJsEnv::DebugPort = 8080;
+
+TSharedRef<FJsEnv> FJsEnv::MakeShared()
+{
+    if (bDebugEnable)
+    {
+        auto JsEnv = ::MakeShared<FJsEnv>(std::make_unique<puerts::DefaultJSModuleLoader>(TEXT("JavaScript")), std::make_shared<puerts::FDefaultLogger>(), DebugPort);
+        JsEnv->WaitDebugger();
+        return JsEnv;
+    }
+    else
+    {
+        return ::MakeShared<FJsEnv>();
+    }
+}
+    
 FJsEnv::FJsEnv(const FString &ScriptRoot)
 {
     GameScript = std::make_unique<FJsEnvImpl>(ScriptRoot);
@@ -409,7 +427,7 @@ FJsEnv::FJsEnv(std::unique_ptr<IJSModuleLoader> InModuleLoader, std::shared_ptr<
 {
     GameScript = std::make_unique<FJsEnvImpl>(std::move(InModuleLoader), InLogger, InDebugPort);
 }
-
+    
 void FJsEnv::Start(const FString& ModuleName, const TArray<TPair<FString, UObject*>> &Arguments)
 {
     GameScript->Start(ModuleName, Arguments);

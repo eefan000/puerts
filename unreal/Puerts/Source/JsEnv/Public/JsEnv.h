@@ -38,6 +38,10 @@ public:
 class JSENV_API FJsEnv// : public TSharedFromThis<FJsEnv> // only a wrapper
 {
 public:
+    static bool bDebugEnable;
+    static int32 DebugPort;
+    static TSharedRef<puerts::FJsEnv> MakeShared();
+    
     explicit FJsEnv(const FString &ScriptRoot = TEXT("JavaScript"));
 
     FJsEnv(std::unique_ptr<IJSModuleLoader> InModuleLoader, std::shared_ptr<ILogger> InLogger, int InDebugPort);
